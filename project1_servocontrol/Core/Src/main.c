@@ -21,7 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+int8_t maxabs(int8_t a[],int8_t len);
+int8_t myabs(int8_t a);
+int8_t IS_ACCEPT_RIGHT(uint8_t * RXBUFFER,int length);
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,10 +50,18 @@ ARM ARM_ARRAY[6];
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim3;
 
+UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN PV */
 int TIM_COUNT = 0;
 int ARM_DEGREE[6] = {75,75,75,75,75,75};  //
+int ARM_DEGREE_LAST[6] = {75,75,75,75,75,75};
 char high[6] ={0};
+uint8_t RXBUFFER[9]={0,0,0,0,0,0,0,0,0};
+int RXFLAG=0;
+uint8_t test=1;
+uint8_t test2=2;
+uint8_t mode=1; //0:default(fast) 1:middle 2:slow
 
 /* USER CODE END PV */
 
@@ -59,6 +69,7 @@ char high[6] ={0};
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void ARM_INIT();
 /* USER CODE END PFP */
@@ -97,12 +108,17 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM3_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   ARM_INIT();//Init ARM Struct
   __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);//!!!!!!!!!!!!!!!!!!!PSC72	ARR10
   HAL_TIM_Base_Start_IT(&htim3);
+
   HAL_Delay(3000);
-  ARM_DEGREE[5] = 25;
+  ARM_DEGREE[5] = 25;   //open gripper
+
+  while(HAL_UART_Receive_IT(&huart1, RXBUFFER, 9) != HAL_OK);
+  while(HAL_UART_Transmit_IT(&huart1, RXBUFFER, 9)!= HAL_OK);
 
 
   /* USER CODE END 2 */
@@ -114,10 +130,23 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9,GPIO_PIN_RESET);
-	  HAL_Delay(1000);
-	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9,GPIO_PIN_SET);
-	  HAL_Delay(1000);
+	  if(RXFLAG==1)
+	  	  {
+		  	  HAL_UART_Transmit_IT(&huart1, &test, 1);
+	  		  IS_ACCEPT_RIGHT(RXBUFFER,9);
+	  		  RXFLAG=0;
+	  	  }
+
+//	  int step=1;
+//	  ARM_DEGREE[4]+=step;
+//	  HAL_Delay(100);  //  36deg/s
+//	  if(ARM_DEGREE[4]>125)
+//	  {
+//		  ARM_DEGREE[4]=75;
+//	  }
+
+
+
   }
   /* USER CODE END 3 */
 }
@@ -203,6 +232,39 @@ static void MX_TIM3_Init(void)
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
+
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
 
 }
 
@@ -315,6 +377,108 @@ void ARM_INIT()
 	ARM_ARRAY[5].GPIO_Pin = GPIO_PIN_10;
 
 }
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	RXFLAG=1;
+	while(HAL_UART_Receive_IT(&huart1, RXBUFFER, 9) != HAL_OK);
+	//while(HAL_UART_Transmit_IT(&huart1, RXBUFFER, 9)!= HAL_OK);
+
+}
+int8_t IS_ACCEPT_RIGHT(uint8_t * RXBUFFER,int length)
+{
+	int8_t i=0;
+	int8_t j=0;
+	int8_t step_counter=0;
+//	float total_steps = 40;  //2 seconds
+	uint8_t position[6]={0,0,0,0,0,0};
+	int8_t delta[6]={0,0,0,0,0,0};
+
+	int8_t step[6]={1,1,1,1,1,1};
+//	int arm_index=0;  //1-6
+	if((RXBUFFER[0])==0xaa&&RXBUFFER[8]==0xff)
+	{
+		for(i=0;i<6;i++)
+		{
+			position[i]=(RXBUFFER[i+1]);
+
+		}
+
+	}
+	if(mode==0)
+	{
+		for(i=0;i<6;i++)
+		{
+			ARM_DEGREE[i]=25+100*position[i]/180;
+		}
+
+
+	}
+	if(mode==1)
+	{
+		for(i=0;i<6;i++)
+		{
+			delta[i]=position[i]-(uint8_t)ARM_DEGREE[i];
+			if(delta[i]<0) {step[i]=-1;}
+		}
+
+//maxabs(delta,6)
+			for(i=0;i<maxabs(delta,6);i++)
+					{
+						for(j=0;j<6;j++)
+						{	if(ARM_DEGREE[j]==(int)position[j])
+							{
+							}
+							else ARM_DEGREE[j]+=step[j];
+						}
+						HAL_Delay(10);   //5S 180DEG
+
+					}
+
+//			while(HAL_UART_Receive_IT(&huart1, RXBUFFER, 9) != HAL_OK)
+//			{
+//				HAL_UART_Transmit_IT(&huart1, &test, 1);
+//			}
+
+
+//			for(i=0;i<(-delta);i++)
+//					{
+//						ARM_DEGREE[arm_index-1]+=(-step);
+//						HAL_Delay(50);   //5S 180DEG
+//					}
+
+
+	}
+	HAL_UART_Transmit_IT(&huart1, &test2, 1);
+}
+
+int8_t maxabs(int8_t a[],int8_t len)
+{
+	int8_t copy[len];
+	int8_t i=0;
+    for(i=0;i<len;i++)
+    {
+        copy[i]=a[i];
+    }
+
+    int8_t temp;
+	for(i=0;i<len-1;i++)
+	{
+		if(myabs(copy[i+1])<myabs(copy[i]))
+		{
+			temp=copy[i];
+			copy[i]=copy[i+1];
+			copy[i+1]=temp;
+		}
+	}
+	return myabs(copy[len-1]);
+}
+
+int8_t myabs(int8_t a)
+{
+	if(a>=0) return a;
+	else return -a;
+	}
 //HAL_GPIO_WritePin()
 //void PWM_CONTROL(GPIO_TypeDef GPIOX,uint16_t GPIO_Pin,int degree)//-90__+90 -> 50__250
 //{
