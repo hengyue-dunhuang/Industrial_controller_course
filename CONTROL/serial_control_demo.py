@@ -23,11 +23,19 @@ def control_bytes_init():
 control_bytes_init()
 
 def control_motor(index:list,angle:list,mode:int =1):
+    if 1 in index:
+        angle[index.index(1)]=180-angle[index.index(1)]
+    if 3 in index:
+        angle[index.index(3)]=180-angle[index.index(3)]
+    if 4 in index:
+        angle[index.index(4)]=180-angle[index.index(4)]
+    if 5 in index:
+        angle[index.index(5)]=180-angle[index.index(5)]
+   
     for i in range(len(index)):
         if(len(hex(angle[i])[2:])==1):
             CONTROL_BUFFER[index[i]]='0'+hex(angle[i])[2:]
         else: CONTROL_BUFFER[index[i]]=hex(angle[i])[2:]
-
 
     if(mode==1):
         CONTROL_BUFFER[7]='01'
@@ -38,11 +46,7 @@ def control_motor(index:list,angle:list,mode:int =1):
         control_bytes[j:j+1]=bytes.fromhex(CONTROL_BUFFER[j])
     
     ser.write(control_bytes)
-    ser.write()
-               
-
+#1  3 4 5； 2号舵机采取了反向措施
 if __name__ == '__main__':
-    control_motor([4,6],[90,90],1)
+    control_motor([1,2,3,4,5,6],[110,80,80,80,80,80],1)
     ser.close()
-
-
