@@ -63,8 +63,8 @@ all: main-build
 main-build: 1_Servo_control.elf secondary-outputs
 
 # Tool invocations
-1_Servo_control.elf 1_Servo_control.map: $(OBJS) $(USER_OBJS) D:\STM32CUBEIDE_workspace\6RLearm\project1_servocontrol\STM32F103RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "1_Servo_control.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"D:\STM32CUBEIDE_workspace\6RLearm\project1_servocontrol\STM32F103RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="1_Servo_control.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+1_Servo_control.elf 1_Servo_control.map: $(OBJS) $(USER_OBJS) D:\STM32CUBEIDE_workspace\6RLearm\GitRep\project1_servocontrol\STM32F103RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "1_Servo_control.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"D:\STM32CUBEIDE_workspace\6RLearm\GitRep\project1_servocontrol\STM32F103RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="1_Servo_control.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

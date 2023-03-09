@@ -61,7 +61,7 @@ uint8_t RXBUFFER[9]={0,0,0,0,0,0,0,0,0};
 int RXFLAG=0;
 uint8_t test=1;
 uint8_t test2=2;
-uint8_t mode=1; //0:default(fast) 1:middle 2:slow
+uint8_t mode; //0:default(fast) 1:middle 2:slow
 
 /* USER CODE END PV */
 
@@ -132,7 +132,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  if(RXFLAG==1)
 	  	  {
-		  	  HAL_UART_Transmit_IT(&huart1, &test, 1);
+//		  	  HAL_UART_Transmit_IT(&huart1, &test, 1);
 	  		  IS_ACCEPT_RIGHT(RXBUFFER,9);
 	  		  RXFLAG=0;
 	  	  }
@@ -391,13 +391,14 @@ int8_t IS_ACCEPT_RIGHT(uint8_t * RXBUFFER,int length)
 	int8_t j=0;
 	int8_t step_counter=0;
 //	float total_steps = 40;  //2 seconds
-	uint8_t position[6]={0,0,0,0,0,0};
+	uint8_t position[6]={0,0,0,0,0,0};    //0-180
 	int8_t delta[6]={0,0,0,0,0,0};
 
 	int8_t step[6]={1,1,1,1,1,1};
 //	int arm_index=0;  //1-6
 	if((RXBUFFER[0])==0xaa&&RXBUFFER[8]==0xff)
 	{
+		mode = RXBUFFER[7];
 		for(i=0;i<6;i++)
 		{
 			position[i]=(RXBUFFER[i+1]);
@@ -405,20 +406,19 @@ int8_t IS_ACCEPT_RIGHT(uint8_t * RXBUFFER,int length)
 		}
 
 	}
-	if(mode==0)
+	if(mode==0x00)
 	{
 		for(i=0;i<6;i++)
 		{
 			ARM_DEGREE[i]=25+100*position[i]/180;
 		}
 
-
 	}
-	if(mode==1)
+	if(mode==0x01)
 	{
 		for(i=0;i<6;i++)
 		{
-			delta[i]=position[i]-(uint8_t)ARM_DEGREE[i];
+			delta[i]=25+(100*position[i])/180-(uint8_t)ARM_DEGREE[i];
 			if(delta[i]<0) {step[i]=-1;}
 		}
 
@@ -426,7 +426,7 @@ int8_t IS_ACCEPT_RIGHT(uint8_t * RXBUFFER,int length)
 			for(i=0;i<maxabs(delta,6);i++)
 					{
 						for(j=0;j<6;j++)
-						{	if(ARM_DEGREE[j]==(int)position[j])
+						{	if(ARM_DEGREE[j]==(25+(100*position[j])/180))
 							{
 							}
 							else ARM_DEGREE[j]+=step[j];
@@ -449,7 +449,7 @@ int8_t IS_ACCEPT_RIGHT(uint8_t * RXBUFFER,int length)
 
 
 	}
-	HAL_UART_Transmit_IT(&huart1, &test2, 1);
+	HAL_UART_Transmit_IT(&huart1, &mode, 1);
 }
 
 int8_t maxabs(int8_t a[],int8_t len)
