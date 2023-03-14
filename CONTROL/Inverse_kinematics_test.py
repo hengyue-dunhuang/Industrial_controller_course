@@ -66,7 +66,8 @@ def aim_it(position): #0 - 180
     if x<0 and y>0:
         control_theta = Fai
     control_theta = int(control_theta/math.pi * 180)
-    control_motor([1],[control_theta],2)
+    return control_theta
+    # control_motor([1],[control_theta],2)
 
 
 
@@ -76,30 +77,10 @@ def get_theta(a:float,b:float,c:float) -> int:
     theta = theta/math.pi * 180
     return int(theta)
 
-def get_it(position):
-    L1 = 10.35  #CM
-    L2 = 8.8    #CM
-    L3 = 17.0   #CM
-
-    x = position[0]
-    y = position[1]
-    z = position[2]
-    a = sqrt(x*x+y*y+z*z)
-    theta1 = get_theta(a,L1,L2)
-    fai = (int)(atan2(z,sqrt(x*x+y*y))/math.pi * 180)
-    theta1 = 180 - (theta1+fai)     #2号舵机控制量
-
-    theta2 = get_theta(L1,L2,a)
-    theta2 = 270 - theta2   #3号舵机控制量
-
-    if(theta1<=180 and theta2 <=180):
-        print('I CAN MAKE IT')
-    
-    else:
-        print('I CAN\'T DO THAT')
 
 def get_it2(position):
-    
+    servo1_angele = aim_it(position)
+    sleep(0.02)
     L1 = 10.35  #CM
     L2 = 8.8    #CM
     L3 = 17.0   #CM
@@ -128,12 +109,19 @@ def get_it2(position):
 
     if(theta1<=180 and theta2 <=180):
         print('I CAN MAKE IT')
-        control_motor([2,3,4],[theta1,theta2,theta3],2)
+        print([theta1,theta2,theta3])
+        control_motor([1,2,3,4],[servo1_angele,theta1,theta2,theta3],2)
+        sleep(3)
+        control_motor([6],[70],2)
+        sleep(3)
+        print('夹取完毕')
+
+        
     else:
         print('I CAN\'T DO THAT')
 
 
-position = [0,31,0]   # test cm   31 MIN--36 MAX
+position = [30,1,5]   # test cm   31 MIN--36 MAX
     
 if __name__ == '__main__':
     # control_motor([1,2,3,4,5,6],[90,90,90,90,90,40],2) #init 
@@ -141,6 +129,7 @@ if __name__ == '__main__':
     # sleep(0.01)
     # control_motor([6],[40],2)
     # control_motor([1,2,3,4,5,6],[90,146,168,0,90,40],2)
-    control_motor([1,2,3,4,5,6],[90,90,90,80,90,50],2)
+    # control_motor([1,2,3,4,5,6],[90,90,90,80,90,50],2)
     get_it2(position)
+    control_motor([1,2,3,4,5,6],[90,90,90,80,90,50],2)
     ser.close()
