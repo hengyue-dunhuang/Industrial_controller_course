@@ -13,7 +13,21 @@ new_w = int(w * scale)
 new_h = int(h * scale)
 # 调整图片大小
 resized_img = cv2.resize(img, (new_w, new_h))
-print(resized_img.shape)
+
+'''LOAD透视变换四个点'''
+pts = np.zeros((4, 2), dtype=np.float32)
+lines = open("data.txt", "r").readlines() 
+
+for i in range(4):
+    pts[i][0] = float((lines[i]).strip('\n').split(',')[0])
+    pts[i][1] = float((lines[i]).strip('\n').split(',')[1])
+
+# 设置输出图像的四个点的坐标
+width, height = 707, 500
+pts2 = np.float32([[0, 0], [width, 0], [0, height], [width, height]])
+
+M = cv2.getPerspectiveTransform(pts, pts2)
+result = cv2.warpPerspective(resized_img, M, (width, height))
 
 
 # 定义高斯核的大小和标准差
@@ -21,9 +35,17 @@ ksize = (11, 11)  # 高斯核大小
 sigma = 0.0  # 标准差
 
 # 进行高斯模糊
-blurred_img = cv2.GaussianBlur(resized_img, ksize, sigma)
+blurred_img = cv2.GaussianBlur(result, ksize, sigma)
 # 将图像转换为HSV颜色空间
 hsv_img = cv2.cvtColor(blurred_img, cv2.COLOR_BGR2HSV)
+
+'''通过像素点找到透视变换后的真实世界坐标下的距离'''
+A4_LEN,A4_WIGTH = 297,210   #mm
+def get_real_position(pixel_position):
+    real_x = pixel_position[0] * A4_LEN/width
+    real_y = pixel_position[1] * A4_WIGTH/height
+    return real_x,real_y
+
 
 def color_detect(hsv_img,color,num):
     K = num
@@ -40,7 +62,7 @@ def color_detect(hsv_img,color,num):
         mask2 = cv2.inRange(hsv_img, lower_red2, upper_red2)
         mask = cv2.add(mask, mask2)
         # 应用掩膜到原始图像中
-        res = cv2.bitwise_and(resized_img, resized_img, mask=mask)
+        res = cv2.bitwise_and(result, result, mask=mask)
         # 将图像转换为灰度图像
         gray = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
         # 进行边缘检测
@@ -59,7 +81,7 @@ def color_detect(hsv_img,color,num):
                 selected_contours.append(c)
 
         # 绘制轮廓
-        cv2.drawContours(resized_img, selected_contours, -1, (0, 255, 255), 2)
+        cv2.drawContours(result, selected_contours, -1, (0, 255, 255), 2)
         return res
     if(color=='green'):
         # 定义HSV绿色的阈值范围
@@ -70,7 +92,7 @@ def color_detect(hsv_img,color,num):
         mask = cv2.inRange(hsv_img, lower_green, upper_green)
 
         # 应用掩膜到原始图像中
-        res = cv2.bitwise_and(resized_img, resized_img, mask=mask)
+        res = cv2.bitwise_and(result, result, mask=mask)
         # 将图像转换为灰度图像
         gray = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
         # 进行边缘检测
@@ -89,7 +111,7 @@ def color_detect(hsv_img,color,num):
                 selected_contours.append(c)
 
         # 绘制轮廓
-        cv2.drawContours(resized_img, selected_contours, -1, (0, 255, 255), 2)
+        cv2.drawContours(result, selected_contours, -1, (0, 255, 255), 2)
         return res
     
 def show(img):
@@ -98,8 +120,8 @@ def show(img):
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    res = color_detect(hsv_img,'green',2)
-    show(resized_img)
+    res = color_detect(hsv_img,'red',2)
+    show(result)
     
 
 

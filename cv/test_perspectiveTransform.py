@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-
+import csv
 # 定义回调函数
 def get_four_points(event, x, y, flags, param):
     global counter, pts
@@ -41,6 +41,15 @@ while True:
     if counter == 4:
         break
     cv2.waitKey(1)
+'''设置四个透视变换点到文件'''
+with open("data.txt", "w") as f:
+    
+    for i in range(4):
+        f.write(str(pts[i][0]))
+        f.write(',')
+        f.write(str(pts[i][1]))
+        f.write('\n')
+    
 
 # 设置输出图像的四个点的坐标
 width, height = 707, 500
@@ -50,7 +59,7 @@ M = cv2.getPerspectiveTransform(pts, pts2)
 result = cv2.warpPerspective(resized_img, M, (width, height))
 test_position = [400,400]
 dis = get_real_position(test_position)
-cv2.imshow('Input', resized_img)
+
 cv2.imshow('Output', result)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
