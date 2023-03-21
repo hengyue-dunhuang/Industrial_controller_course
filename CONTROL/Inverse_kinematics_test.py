@@ -112,16 +112,16 @@ def get_it2(position):
         print([theta1,theta2,theta3])
         control_motor([1,2,3,4],[servo1_angele,theta1,theta2,theta3],2)
         sleep(3)
-        control_motor([6],[70],2)
+        control_motor([6],[90],2)
         sleep(3)
         print('夹取完毕')
-
+    
         
     else:
         print('I CAN\'T DO THAT')
 
 
-position = [30,1,5]   # test cm   31 MIN--36 MAX
+position = [27,15,3]   # test cm   31 MIN--36 MAX
     
 if __name__ == '__main__':
     # control_motor([1,2,3,4,5,6],[90,90,90,90,90,40],2) #init 
@@ -131,5 +131,5 @@ if __name__ == '__main__':
     # control_motor([1,2,3,4,5,6],[90,146,168,0,90,40],2)
     # control_motor([1,2,3,4,5,6],[90,90,90,80,90,50],2)
     get_it2(position)
-    control_motor([1,2,3,4,5,6],[90,90,90,80,90,50],2)
+    control_motor([1,2,3,4,5,6],[90,90,90,80,90,90],2)
     ser.close()
