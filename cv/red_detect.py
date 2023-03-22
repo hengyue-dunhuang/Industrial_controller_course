@@ -46,6 +46,31 @@ def get_real_position(pixel_position):
     real_y = pixel_position[1] * A4_WIGTH/height
     return real_x,real_y
 
+POSITION = []
+def find_contour_maxY_meanX(contour):
+    x_list = []
+    y_list = []
+    position = [] #x,y pixels
+    for i in range(len(contour)):
+        x_list.append(contour[i][0][0])
+        y_list.append(contour[i][0][1])
+    index = np.where(y_list==max(y_list))
+    position.append(x_list[index[0][0]])    #x y最大时对应的横坐标x
+    position.append(max(y_list))        #y
+    return position
+
+def draw_circle(img,position,r):
+    center_coordinates = int(position[0]),int(position[1])
+    radius = r
+    # 绘制圆圈
+    color = (0, 0, 255) # BGR通道颜色
+    thickness = 2 # 圆圈线条的厚度
+    cv2.circle(img, center_coordinates, radius, color, thickness)
+
+def draw_all_circle(img,POSITION,r):
+    for i in range(len(POSITION)):
+        draw_circle(img,POSITION[i],r)
+
 
 def color_detect(hsv_img,color,num):
     K = num
@@ -79,7 +104,9 @@ def color_detect(hsv_img,color,num):
         for c in contours:
             if cv2.contourArea(c) in max_areas:
                 selected_contours.append(c)
-
+        for sel_contour in selected_contours:
+            POSITION.append(find_contour_maxY_meanX(sel_contour))
+        
         # 绘制轮廓
         cv2.drawContours(result, selected_contours, -1, (0, 255, 255), 2)
         return res
@@ -109,8 +136,9 @@ def color_detect(hsv_img,color,num):
         for c in contours:
             if cv2.contourArea(c) in max_areas:
                 selected_contours.append(c)
-
         # 绘制轮廓
+        for sel_contour in selected_contours:
+            POSITION.append(find_contour_maxY_meanX(sel_contour))
         cv2.drawContours(result, selected_contours, -1, (0, 255, 255), 2)
         return res
     
@@ -120,7 +148,9 @@ def show(img):
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    res = color_detect(hsv_img,'red',2)
+    res = color_detect(hsv_img,'red',1)
+    res = color_detect(hsv_img,'green',1)
+    draw_all_circle(result,POSITION,10)
     show(result)
     
 
