@@ -1,7 +1,7 @@
 import cv2 
 import numpy as np
 # 读取图像文件
-img = cv2.imread("IMG2.jpg")
+img = cv2.imread("my_IMG1.jpg")
 print(img.shape)
 
 # 获取原始图片的宽度和高度
@@ -112,8 +112,8 @@ def color_detect(hsv_img,color,num):
         return res
     if(color=='green'):
         # 定义HSV绿色的阈值范围
-        lower_green = np.array([35, 43, 46])
-        upper_green = np.array([77, 255, 255])
+        lower_green = np.array([40,0, 0])
+        upper_green = np.array([81, 255, 255])
 
         # 创建一个掩膜来只保留在HSV范围内的绿色像素
         mask = cv2.inRange(hsv_img, lower_green, upper_green)
@@ -141,15 +141,18 @@ def color_detect(hsv_img,color,num):
             POSITION.append(find_contour_maxY_meanX(sel_contour))
         cv2.drawContours(result, selected_contours, -1, (0, 255, 255), 2)
         return res
-    
 def show(img):
     cv2.imshow('',img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    res = color_detect(hsv_img,'red',1)
-    res = color_detect(hsv_img,'green',1)
+    real_position = []
+    res = color_detect(hsv_img,'red',2)
+    res = color_detect(hsv_img,'green',2)
+    for i in range(4):
+        real_position.append(get_real_position(POSITION[i]))
+    print(real_position)
     draw_all_circle(result,POSITION,10)
     show(result)
     

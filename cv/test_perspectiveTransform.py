@@ -20,7 +20,7 @@ pts = np.zeros((4, 2), dtype=np.float32)
 A4_LEN,A4_WIGTH = 297,210   #mm
 
 # 读取输入图像
-img = cv2.imread('IMG2.jpg')
+img = cv2.imread('my_IMG1.jpg')
 
 # 获取原始图片的宽度和高度
 h, w = img.shape[:2]
